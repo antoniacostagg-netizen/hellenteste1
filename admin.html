@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Hellen Moda Fitness</title>
+    <link rel="stylesheet" href="admin.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Tela de login -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-form">
+            <h2>Login Administrativo</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="E-mail" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+            <p id="login-error" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- Painel administrativo (após login) -->
+    <div class="admin-panel" id="admin-panel" style="display: none;">
+        <header class="admin-header">
+            <h1>Painel Administrativo</h1>
+            <button id="logout-btn">Sair</button>
+        </header>
+
+        <main class="admin-main">
+            <!-- Abas -->
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="products">Gerenciar Produtos</button>
+                <button class="tab-btn" data-tab="inventory">Controle de Estoque</button>
+                <button class="tab-btn" data-tab="settings">Configurações</button>
+            </div>
+
+            <!-- Conteúdo das abas -->
+            <div class="tab-content active" id="products-tab">
+                <h2>Gerenciar Produtos</h2>
+                <button id="add-product-btn" class="add-btn">+ Adicionar Produto</button>
+                
+                <div class="products-list" id="products-list">
+                    <!-- Lista de produtos será carregada aqui -->
+                </div>
+            </div>
+
+            <div class="tab-content" id="inventory-tab">
+                <h2>Controle de Estoque</h2>
+                <div class="inventory-table-container">
+                    <table class="inventory-table" id="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Cor</th>
+                                <th>Estoque</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados de estoque serão carregados aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-content" id="settings-tab">
+                <h2>Configurações</h2>
+                <div class="settings-form">
+                    <h3>Número do WhatsApp para Pedidos</h3>
+                    <form id="whatsapp-form">
+                        <input type="text" id="whatsapp-number" placeholder="Número do WhatsApp (ex: 85997720832)" required>
+                        <button type="submit">Salvar</button>
+                    </form>
+                    <p id="whatsapp-status"></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de produto -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-product-modal">✕</button>
+            <h2 id="product-modal-title">Adicionar Produto</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                
+                <div class="form-group">
+                    <label for="product-name">Nome do Produto</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-price">Preço (R$)</label>
+                    <input type="number" id="product-price" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-category">Categoria</label>
+                    <select id="product-category" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="conjuntos">Conjuntos</option>
+                        <option value="macaquinhos">Macaquinhos</option>
+                        <option value="tops">Tops</option>
+                        <option value="shorts">Shorts</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Imagens (até 3 URLs)</label>
+                    <div id="image-inputs">
+                        <input type="url" class="image-url" placeholder="URL da imagem 1">
+                    </div>
+                    <button type="button" id="add-image-btn">+ Adicionar outra imagem</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Cores e Estoque</label>
+                    <div id="color-inputs">
+                        <div class="color-input">
+                            <input type="text" class="color-name" placeholder="Nome da cor">
+                            <input type="color" class="color-code" value="#c8499f">
+                            <input type="number" class="color-stock" placeholder="Estoque" min="0">
+                            <button type="button" class="remove-color-btn">✕</button>
+                        </div>
+                    </div>
+                    <button type="button" id="add-color-btn">+ Adicionar outra cor</button>
+                </div>
+                
+                <button type="submit" id="save-product-btn">Salvar Produto</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
