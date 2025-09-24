@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hellen Moda Fitness</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <img src="https://i.postimg.cc/QCrVHH8G/logo-hellen.png" alt="Hellen Moda Fitness">
+        </div>
+        <nav class="nav-icons">
+            <a href="#" class="nav-icon" id="home-btn">🏠</a>
+            <a href="#" class="nav-icon" id="menu-btn">☰</a>
+            <a href="#" class="nav-icon" id="cart-btn">🛒</a>
+        </nav>
+    </header>
+
+    <!-- Mensagem abaixo do cabeçalho -->
+    <div class="message-bar">
+        <p>Escolha seu produto e seu pedido será enviado via WhatsApp.</p>
+    </div>
+
+    <!-- Menu lateral -->
+    <div class="side-menu" id="side-menu">
+        <div class="menu-header">
+            <button class="close-menu" id="close-menu">✕</button>
+        </div>
+        <ul class="menu-items">
+            <li><a href="#" data-category="all">Todos os produtos</a></li>
+            <li><a href="#" data-category="conjuntos">Conjuntos</a></li>
+            <li><a href="#" data-category="macaquinhos">Macaquinhos</a></li>
+            <li><a href="#" data-category="tops">Tops</a></li>
+            <li><a href="#" data-category="shorts">Shorts</a></li>
+        </ul>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <main>
+        <section class="products-section">
+            <h2>Nossos Produtos</h2>
+            <div class="products-grid" id="products-grid">
+                <!-- Produtos serão carregados dinamicamente -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="contact-info">
+                <p>Telefone: (85) 99772-0832</p>
+                <p>Endereço: Rua José Valdir Barbosa 45 - Maranguape</p>
+                <p>E-mail: contato@hellenfitnes.com.br</p>
+                <p>Instagram: @hellen_moda_fitness</p>
+                <p>WhatsApp: (85) 99772-0832</p>
+            </div>
+            <!-- Ícone para admin (apenas visível se logado) -->
+            <div class="admin-link" id="admin-link" style="display: none;">
+                <a href="admin.html" title="Painel Administrativo">🎲</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal do produto -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-product-modal">✕</button>
+            <div class="product-details" id="product-details">
+                <!-- Detalhes do produto serão carregados aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do carrinho -->
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-cart-modal">✕</button>
+            <h2>Seu Carrinho</h2>
+            <div class="cart-items" id="cart-items">
+                <!-- Itens do carrinho serão carregados aqui -->
+            </div>
+            <div class="cart-total">
+                <p>Total: R$ <span id="cart-total-value">0,00</span></p>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Modal de finalização -->
+    <div class="modal" id="checkout-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-checkout-modal">✕</button>
+            <h2>Finalizar Pedido</h2>
+            <p class="min-order-warning">Pedido mínimo de 10 peças</p>
+            <form id="checkout-form">
+                <input type="text" name="name" placeholder="Nome completo" required>
+                <input type="text" name="cep" placeholder="CEP" required>
+                <span class="cep-note">O frete será calculado quando o pedido for enviado via WhatsApp.</span>
+                <input type="text" name="address" placeholder="Endereço completo" required>
+                <select name="delivery" required>
+                    <option value="">Tipo de entrega</option>
+                    <option value="transportadora">Transportadora</option>
+                    <option value="excursões">Excursões</option>
+                    <option value="uber">Uber</option>
+                    <option value="correio">Correio</option>
+                </select>
+                <input type="tel" name="phone" placeholder="Telefone" required>
+                <div class="payment-info">
+                    <p>Forma de pagamento: <strong>PIX</strong></p>
+                </div>
+                <button type="submit">Enviar Pedido via WhatsApp</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Botão flutuante de finalizar compra -->
+    <button class="floating-checkout-btn" id="floating-checkout-btn">Finalizar Compra</button>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
