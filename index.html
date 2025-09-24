@@ -14,7 +14,7 @@
     <!-- Header -->
     <header>
         <div class="logo">
-            <img src="https://i.postimg.cc/QCrVHH8G/logo-hellen.png" alt="Hellen Moda Fitness">
+            <h1>HELLEN MODA FITNESS</h1>
         </div>
         <nav class="nav-icons">
             <a href="#" class="nav-icon" id="home-btn">🏠</a>
@@ -45,7 +45,6 @@
     <!-- Conteúdo principal -->
     <main>
         <section class="products-section">
-            <h2>Nossos Produtos</h2>
             <div class="products-grid" id="products-grid">
                 <!-- Produtos serão carregados dinamicamente -->
             </div>
@@ -71,7 +70,7 @@
 
     <!-- Modal do produto -->
     <div class="modal" id="product-modal">
-        <div class="modal-content">
+        <div class="modal-content product-modal-content">
             <button class="close-modal" id="close-product-modal">✕</button>
             <div class="product-details" id="product-details">
                 <!-- Detalhes do produto serão carregados aqui -->
@@ -81,48 +80,71 @@
 
     <!-- Modal do carrinho -->
     <div class="modal" id="cart-modal">
-        <div class="modal-content">
+        <div class="modal-content cart-modal-content">
             <button class="close-modal" id="close-cart-modal">✕</button>
             <h2>Seu Carrinho</h2>
             <div class="cart-items" id="cart-items">
                 <!-- Itens do carrinho serão carregados aqui -->
             </div>
-            <div class="cart-total">
-                <p>Total: R$ <span id="cart-total-value">0,00</span></p>
+            <div class="cart-summary">
+                <div class="cart-total">
+                    <p>Total: R$ <span id="cart-total-value">0,00</span></p>
+                </div>
+                <p class="min-order-note">Pedido mínimo de 10 peças</p>
+                <button class="checkout-btn" id="checkout-btn">Finalizar Compra</button>
             </div>
-            <button class="checkout-btn" id="checkout-btn">Finalizar Compra</button>
         </div>
     </div>
 
     <!-- Modal de finalização -->
     <div class="modal" id="checkout-modal">
-        <div class="modal-content">
+        <div class="modal-content checkout-modal-content">
             <button class="close-modal" id="close-checkout-modal">✕</button>
             <h2>Finalizar Pedido</h2>
-            <p class="min-order-warning">Pedido mínimo de 10 peças</p>
+            <p class="min-order-warning">⚠️ Pedido mínimo de 10 peças</p>
+            
+            <div class="order-summary">
+                <h3>Resumo do Pedido</h3>
+                <div id="order-items-list"></div>
+                <div class="order-total">
+                    <strong>Total: R$ <span id="order-total-value">0,00</span></strong>
+                </div>
+            </div>
+            
             <form id="checkout-form">
                 <input type="text" name="name" placeholder="Nome completo" required>
                 <input type="text" name="cep" placeholder="CEP" required>
-                <span class="cep-note">O frete será calculado quando o pedido for enviado via WhatsApp.</span>
+                <small class="cep-note">O frete será calculado quando o pedido for enviado via WhatsApp.</small>
                 <input type="text" name="address" placeholder="Endereço completo" required>
+                
                 <select name="delivery" required>
-                    <option value="">Tipo de entrega</option>
-                    <option value="transportadora">Transportadora</option>
-                    <option value="excursões">Excursões</option>
-                    <option value="uber">Uber</option>
-                    <option value="correio">Correio</option>
+                    <option value="">Selecione o tipo de entrega</option>
+                    <option value="Transportadora">Transportadora</option>
+                    <option value="Excursões">Excursões</option>
+                    <option value="Uber">Uber</option>
+                    <option value="Correio">Correio</option>
                 </select>
-                <input type="tel" name="phone" placeholder="Telefone" required>
+                
+                <input type="tel" name="phone" placeholder="Telefone com DDD" required>
+                
                 <div class="payment-info">
-                    <p>Forma de pagamento: <strong>PIX</strong></p>
+                    <p><strong>Forma de pagamento: PIX</strong></p>
+                    <small>O código PIX será enviado via WhatsApp após a confirmação do pedido.</small>
                 </div>
-                <button type="submit">Enviar Pedido via WhatsApp</button>
+                
+                <button type="submit" class="whatsapp-btn">📱 Enviar Pedido via WhatsApp</button>
             </form>
         </div>
     </div>
 
     <!-- Botão flutuante de finalizar compra -->
-    <button class="floating-checkout-btn" id="floating-checkout-btn">Finalizar Compra</button>
+    <button class="floating-checkout-btn" id="floating-checkout-btn">
+        <span>Finalizar Compra</span>
+        <span class="cart-count" id="floating-cart-count">0</span>
+    </button>
+
+    <!-- Overlay para fechar modais -->
+    <div class="modal-overlay" id="modal-overlay"></div>
 
     <!-- Scripts -->
     <script src="script.js"></script>
