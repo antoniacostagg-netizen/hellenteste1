@@ -18,8 +18,6 @@ let currentUser = null;
 let products = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentCategory = 'all';
-let currentProductImages = [];
-let currentImageIndex = 0;
 
 // Elementos DOM
 const productsGrid = document.getElementById('products-grid');
@@ -49,6 +47,7 @@ const modalOverlay = document.getElementById('modal-overlay');
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Iniciando aplicação...');
     initAuth();
     loadProducts();
     setupEventListeners();
@@ -60,8 +59,10 @@ function initAuth() {
     auth.onAuthStateChanged(user => {
         currentUser = user;
         if (user) {
+            console.log('Usuário logado:', user.email);
             adminLink.style.display = 'block';
         } else {
+            console.log('Usuário não logado');
             adminLink.style.display = 'none';
         }
     });
@@ -69,11 +70,20 @@ function initAuth() {
 
 // Carregar produtos do Firestore
 function loadProducts() {
+    console.log('Carregando produtos...');
     db.collection('products').onSnapshot(snapshot => {
         products = [];
         snapshot.forEach(doc => {
-            products.push({ id: doc.id, ...doc.data() });
+            const productData = doc.data();
+            products.push({ 
+                id: doc.id, 
+                ...productData,
+                // Garantir que arrays existam
+                images: productData.images || [],
+                colors: productData.colors || []
+            });
         });
+        console.log('Produtos carregados:', products.length);
         displayProducts();
     }, error => {
         console.error('Erro ao carregar produtos:', error);
@@ -82,6 +92,7 @@ function loadProducts() {
 
 // Exibir produtos na grade
 function displayProducts() {
+    console.log('Exibindo produtos para categoria:', currentCategory);
     productsGrid.innerHTML = '';
     
     const filteredProducts = currentCategory === 'all' 
@@ -104,14 +115,16 @@ function createProductCard(product) {
     const card = document.createElement('div');
     card.className = 'product-card';
     
-    const mainImage = product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/300x300?text=Produto+Sem+Imagem';
+    const mainImage = product.images && product.images.length > 0 
+        ? product.images[0] 
+        : 'https://via.placeholder.com/300x300/ffffff/c8499f?text=Sem+Imagem';
     
     card.innerHTML = `
         <div class="product-image-container">
             <img src="${mainImage}" alt="${product.name}" class="product-image" data-product-id="${product.id}">
         </div>
         <div class="product-thumbnails">
-            ${product.images && product.images.slice(0, 3).map((img, index) => 
+            ${product.images.slice(0, 3).map((img, index) => 
                 `<img src="${img}" class="thumbnail ${index === 0 ? 'active' : ''}" 
                       data-product-id="${product.id}" data-image-index="${index}">`
             ).join('')}
@@ -128,6 +141,8 @@ function createProductCard(product) {
 
 // Configurar event listeners
 function setupEventListeners() {
+    console.log('Configurando event listeners...');
+    
     // Menu lateral
     menuBtn.addEventListener('click', openSideMenu);
     closeMenuBtn.addEventListener('click', closeSideMenu);
@@ -138,10 +153,7 @@ function setupEventListeners() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             currentCategory = link.getAttribute('data-category');
-            
-            // Atualizar estado ativo do menu
-            categoryLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
+            console.log('Categoria selecionada:', currentCategory);
             
             displayProducts();
             closeSideMenu();
@@ -152,52 +164,60 @@ function setupEventListeners() {
     homeBtn.addEventListener('click', (e) => {
         e.preventDefault();
         currentCategory = 'all';
-        categoryLinks.forEach(l => l.classList.remove('active'));
+        console.log('Voltando para home');
         displayProducts();
     });
     
     // Carrinho
     cartBtn.addEventListener('click', openCartModal);
-    closeCartModal.addEventListener('click', closeCartModalFunc);
+    closeCartModal.addEventListener('click', closeCartModal);
     
     // Finalizar compra
     checkoutBtn.addEventListener('click', openCheckoutModal);
     floatingCheckoutBtn.addEventListener('click', openCheckoutModal);
     
-    closeCheckoutModal.addEventListener('click', closeCheckoutModalFunc);
+    closeCheckoutModal.addEventListener('click', closeCheckoutModal);
     
     // Formulário de finalização
     checkoutForm.addEventListener('submit', handleCheckout);
     
     // Modal de produto
-    closeProductModal.addEventListener('click', closeProductModalFunc);
+    closeProductModal.addEventListener('click', closeProductModal);
     
     // Delegação de eventos para produtos dinâmicos
     productsGrid.addEventListener('click', handleProductGridClick);
+    
+    console.log('Event listeners configurados');
 }
 
 // Funções de abertura/fechamento de modais
 function openSideMenu() {
+    console.log('Abrindo menu lateral');
     sideMenu.classList.add('active');
     modalOverlay.classList.add('active');
 }
 
 function closeSideMenu() {
+    console.log('Fechando menu lateral');
     sideMenu.classList.remove('active');
     modalOverlay.classList.remove('active');
 }
 
 function openCartModal() {
+    console.log('Abrindo carrinho');
     cartModal.classList.add('active');
     modalOverlay.classList.add('active');
 }
 
-function closeCartModalFunc() {
+function closeCartModal() {
+    console.log('Fechando carrinho');
     cartModal.classList.remove('active');
     modalOverlay.classList.remove('active');
 }
 
 function openCheckoutModal() {
+    console.log('Abrindo checkout');
+    
     if (cart.length === 0) {
         alert('Seu carrinho está vazio!');
         return;
@@ -214,17 +234,20 @@ function openCheckoutModal() {
     modalOverlay.classList.add('active');
 }
 
-function closeCheckoutModalFunc() {
+function closeCheckoutModal() {
+    console.log('Fechando checkout');
     checkoutModal.classList.remove('active');
     modalOverlay.classList.remove('active');
 }
 
-function closeProductModalFunc() {
+function closeProductModal() {
+    console.log('Fechando modal do produto');
     productModal.classList.remove('active');
     modalOverlay.classList.remove('active');
 }
 
 function closeAllModals() {
+    console.log('Fechando todos os modais');
     sideMenu.classList.remove('active');
     cartModal.classList.remove('active');
     checkoutModal.classList.remove('active');
@@ -235,12 +258,15 @@ function closeAllModals() {
 // Manipular cliques na grade de produtos
 function handleProductGridClick(e) {
     const target = e.target;
+    console.log('Clique na grade:', target.className);
     
     if (target.classList.contains('product-image') || 
         target.classList.contains('thumbnail') ||
         target.classList.contains('buy-btn')) {
         
         const productId = target.getAttribute('data-product-id');
+        console.log('Abrindo produto:', productId);
+        
         if (productId) {
             openProductModal(productId);
         }
@@ -249,20 +275,30 @@ function handleProductGridClick(e) {
 
 // Abrir modal do produto
 function openProductModal(productId) {
+    console.log('Abrindo modal do produto:', productId);
     const product = products.find(p => p.id === productId);
-    if (!product) return;
     
-    currentProductImages = product.images || [];
-    currentImageIndex = 0;
+    if (!product) {
+        console.error('Produto não encontrado:', productId);
+        return;
+    }
+    
+    console.log('Produto encontrado:', product.name);
     
     productDetails.innerHTML = `
         <div class="product-images">
             <div class="main-image-container">
-                <img src="${currentProductImages[0]}" alt="${product.name}" class="main-image" id="main-product-image">
+                <img src="${product.images[0] || 'https://via.placeholder.com/400x400'}" 
+                     alt="${product.name}" 
+                     class="main-image" 
+                     id="main-product-image">
             </div>
-            <div class="thumbnails-container">
-                ${currentProductImages.map((img, index) => 
-                    `<img src="${img}" class="thumbnail ${index === 0 ? 'active' : ''}" data-index="${index}">`
+            <div class="thumbnails-container" id="thumbnails-container">
+                ${product.images.map((img, index) => 
+                    `<img src="${img}" 
+                         class="thumbnail ${index === 0 ? 'active' : ''}" 
+                         data-index="${index}"
+                         alt="Miniatura ${index + 1}">`
                 ).join('')}
             </div>
         </div>
@@ -272,7 +308,7 @@ function openProductModal(productId) {
             
             <div class="color-options">
                 <h3>Escolha a cor e quantidade:</h3>
-                ${product.colors && product.colors.length > 0 ? 
+                ${product.colors.length > 0 ? 
                     product.colors.map((color, index) => `
                         <div class="color-option">
                             <div class="color-swatch" style="background-color: ${color.code}"></div>
@@ -280,105 +316,122 @@ function openProductModal(productId) {
                                 <div class="color-name">${color.name}</div>
                                 <div class="color-stock">Estoque: ${color.stock} unidades</div>
                             </div>
-                            <input type="number" class="quantity-input" min="0" max="${color.stock}" 
-                                   data-color-index="${index}" placeholder="0" value="0">
+                            <input type="number" 
+                                   class="quantity-input" 
+                                   min="0" 
+                                   max="${color.stock}" 
+                                   data-color-index="${index}" 
+                                   placeholder="0" 
+                                   value="0">
                         </div>
                     `).join('') : 
                     '<p>Nenhuma cor disponível no momento.</p>'
                 }
             </div>
             
-            <button class="add-to-cart-btn" data-product-id="${product.id}">
+            <button class="add-to-cart-btn" id="add-to-cart-btn" data-product-id="${product.id}">
                 Adicionar ao Carrinho
             </button>
         </div>
     `;
     
-    // Event listeners para as miniaturas
-    const thumbnails = productDetails.querySelectorAll('.thumbnail');
-    const mainImage = productDetails.getElementById('main-product-image');
+    // Configurar eventos das miniaturas
+    setupThumbnailEvents(product.images);
+    
+    // Configurar evento do botão adicionar ao carrinho
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    addToCartBtn.addEventListener('click', () => {
+        console.log('Adicionando ao carrinho:', product.name);
+        addToCart(product);
+    });
+    
+    // Configurar swipe para mobile
+    setupSwipeEvents(product.images);
+    
+    productModal.classList.add('active');
+    modalOverlay.classList.add('active');
+}
+
+// Configurar eventos das miniaturas
+function setupThumbnailEvents(images) {
+    const thumbnails = document.querySelectorAll('.thumbnails-container .thumbnail');
+    const mainImage = document.getElementById('main-product-image');
     
     thumbnails.forEach(thumb => {
         thumb.addEventListener('click', () => {
             const index = parseInt(thumb.getAttribute('data-index'));
-            currentImageIndex = index;
-            mainImage.src = currentProductImages[index];
+            console.log('Mudando para imagem:', index);
+            
+            // Atualizar imagem principal
+            mainImage.src = images[index];
             
             // Atualizar estado ativo
             thumbnails.forEach(t => t.classList.remove('active'));
             thumb.classList.add('active');
         });
     });
-    
-    // Event listener para o botão de adicionar ao carrinho
-    const addToCartBtn = productDetails.querySelector('.add-to-cart-btn');
-    addToCartBtn.addEventListener('click', () => {
-        addToCart(product);
-    });
-    
-    // Permitir navegação por swipe (para mobile)
+}
+
+// Configurar eventos de swipe
+function setupSwipeEvents(images) {
+    const mainImageContainer = document.querySelector('.main-image-container');
     let touchStartX = 0;
-    let touchEndX = 0;
+    let currentImageIndex = 0;
     
-    const mainImageContainer = productDetails.querySelector('.main-image-container');
     mainImageContainer.addEventListener('touchstart', e => {
         touchStartX = e.changedTouches[0].screenX;
     });
     
     mainImageContainer.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > 50) { // Limite mínimo para considerar swipe
+            if (diff > 0) {
+                // Swipe left - próxima imagem
+                currentImageIndex = (currentImageIndex + 1) % images.length;
+            } else {
+                // Swipe right - imagem anterior
+                currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+            }
+            
+            updateMainImage(images, currentImageIndex);
+        }
     });
+}
+
+// Atualizar imagem principal
+function updateMainImage(images, index) {
+    const mainImage = document.getElementById('main-product-image');
+    const thumbnails = document.querySelectorAll('.thumbnails-container .thumbnail');
     
-    function handleSwipe() {
-        if (touchEndX < touchStartX - 50) {
-            // Swipe left - próxima imagem
-            nextImage();
-        } else if (touchEndX > touchStartX + 50) {
-            // Swipe right - imagem anterior
-            prevImage();
-        }
-    }
+    mainImage.src = images[index];
     
-    function nextImage() {
-        if (currentProductImages.length > 1) {
-            currentImageIndex = (currentImageIndex + 1) % currentProductImages.length;
-            updateMainImage();
-        }
-    }
-    
-    function prevImage() {
-        if (currentProductImages.length > 1) {
-            currentImageIndex = (currentImageIndex - 1 + currentProductImages.length) % currentProductImages.length;
-            updateMainImage();
-        }
-    }
-    
-    function updateMainImage() {
-        mainImage.src = currentProductImages[currentImageIndex];
-        thumbnails.forEach((t, i) => {
-            t.classList.toggle('active', i === currentImageIndex);
-        });
-    }
-    
-    productModal.classList.add('active');
-    modalOverlay.classList.add('active');
+    // Atualizar miniaturas ativas
+    thumbnails.forEach((thumb, i) => {
+        thumb.classList.toggle('active', i === index);
+    });
 }
 
 // Adicionar produto ao carrinho
 function addToCart(product) {
-    const quantityInputs = productDetails.querySelectorAll('.quantity-input');
+    console.log('Processando adição ao carrinho para:', product.name);
+    
+    const quantityInputs = document.querySelectorAll('.quantity-input');
     let hasItems = false;
-    let itemsAdded = 0;
+    let totalItems = 0;
     
     quantityInputs.forEach(input => {
         const quantity = parseInt(input.value) || 0;
+        
         if (quantity > 0) {
             const colorIndex = parseInt(input.getAttribute('data-color-index'));
             const color = product.colors[colorIndex];
             
+            console.log(`Cor: ${color.name}, Quantidade: ${quantity}`);
+            
             if (quantity > color.stock) {
-                alert(`Quantidade solicitada para ${color.name} excede o estoque disponível!`);
+                alert(`❌ Quantidade solicitada para ${color.name} excede o estoque disponível!`);
                 return;
             }
             
@@ -388,8 +441,11 @@ function addToCart(product) {
             );
             
             if (existingItemIndex !== -1) {
+                // Atualizar quantidade existente
                 cart[existingItemIndex].quantity += quantity;
+                console.log('Item existente atualizado');
             } else {
+                // Adicionar novo item
                 cart.push({
                     productId: product.id,
                     name: product.name,
@@ -398,12 +454,13 @@ function addToCart(product) {
                     colorName: color.name,
                     colorCode: color.code,
                     quantity: quantity,
-                    image: product.images[0]
+                    image: product.images[0] || 'https://via.placeholder.com/100x100'
                 });
+                console.log('Novo item adicionado');
             }
             
             hasItems = true;
-            itemsAdded += quantity;
+            totalItems += quantity;
             
             // Redução temporária do estoque
             updateTemporaryStock(product.id, colorIndex, quantity, 'decrease');
@@ -413,15 +470,17 @@ function addToCart(product) {
     if (hasItems) {
         saveCart();
         updateCartUI();
-        alert(`${itemsAdded} peça(s) adicionada(s) ao carrinho!`);
-        closeProductModalFunc();
+        alert(`✅ ${totalItems} peça(s) adicionada(s) ao carrinho!`);
+        closeProductModal();
     } else {
-        alert('Selecione pelo menos uma cor e quantidade!');
+        alert('⚠️ Selecione pelo menos uma cor e quantidade!');
     }
 }
 
 // Atualizar estoque temporário no Firestore
 function updateTemporaryStock(productId, colorIndex, quantity, operation) {
+    console.log(`Atualizando estoque: ${operation} ${quantity} unidades`);
+    
     const productRef = db.collection('products').doc(productId);
     
     db.runTransaction(transaction => {
@@ -444,28 +503,32 @@ function updateTemporaryStock(productId, colorIndex, quantity, operation) {
             
             transaction.update(productRef, { colors: updatedColors });
         });
+    }).then(() => {
+        console.log('Estoque atualizado com sucesso');
     }).catch(error => {
-        console.error('Erro ao atualizar estoque temporário:', error);
+        console.error('Erro ao atualizar estoque:', error);
     });
 }
 
 // Salvar carrinho no localStorage
 function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
+    console.log('Carrinho salvo no localStorage');
 }
 
 // Atualizar UI do carrinho
 function updateCartUI() {
+    console.log('Atualizando UI do carrinho');
     cartItems.innerHTML = '';
     
     if (cart.length === 0) {
         cartItems.innerHTML = '<p class="empty-cart">Seu carrinho está vazio</p>';
         cartTotalValue.textContent = '0,00';
-        floatingCheckoutBtn.classList.remove('visible');
+        floatingCheckoutBtn.style.display = 'none';
         return;
     }
     
-    floatingCheckoutBtn.classList.add('visible');
+    floatingCheckoutBtn.style.display = 'flex';
     
     let total = 0;
     let totalItems = 0;
@@ -487,41 +550,48 @@ function updateCartUI() {
             <div class="cart-item-actions">
                 <div class="quantity-controls">
                     <button class="quantity-btn decrease" data-index="${index}">-</button>
-                    <span>${item.quantity}</span>
+                    <span class="item-quantity">${item.quantity}</span>
                     <button class="quantity-btn increase" data-index="${index}">+</button>
                 </div>
-                <button class="remove-item" data-index="${index}">✕</button>
+                <button class="remove-item" data-index="${index}" title="Remover item">✕</button>
             </div>
         `;
         
         cartItems.appendChild(cartItem);
     });
     
+    // Atualizar totais
     cartTotalValue.textContent = total.toFixed(2);
     floatingCartCount.textContent = totalItems;
     
-    // Adicionar event listeners para os controles de quantidade
-    const decreaseButtons = cartItems.querySelectorAll('.decrease');
-    const increaseButtons = cartItems.querySelectorAll('.increase');
-    const removeButtons = cartItems.querySelectorAll('.remove-item');
+    // Adicionar event listeners aos botões do carrinho
+    addCartEventListeners();
     
-    decreaseButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const index = parseInt(e.target.getAttribute('data-index'));
+    console.log('Carrinho atualizado. Total de itens:', totalItems, 'Valor total: R$', total.toFixed(2));
+}
+
+// Adicionar event listeners aos itens do carrinho
+function addCartEventListeners() {
+    // Botões de diminuir quantidade
+    document.querySelectorAll('.decrease').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.decrease').getAttribute('data-index'));
             updateCartItemQuantity(index, -1);
         });
     });
     
-    increaseButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const index = parseInt(e.target.getAttribute('data-index'));
+    // Botões de aumentar quantidade
+    document.querySelectorAll('.increase').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.increase').getAttribute('data-index'));
             updateCartItemQuantity(index, 1);
         });
     });
     
-    removeButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const index = parseInt(e.target.getAttribute('data-index'));
+    // Botões de remover item
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.remove-item').getAttribute('data-index'));
             removeFromCart(index);
         });
     });
@@ -532,7 +602,10 @@ function updateCartItemQuantity(index, change) {
     const item = cart[index];
     const product = products.find(p => p.id === item.productId);
     
-    if (!product) return;
+    if (!product) {
+        console.error('Produto não encontrado para atualização');
+        return;
+    }
     
     const newQuantity = item.quantity + change;
     
@@ -541,16 +614,17 @@ function updateCartItemQuantity(index, change) {
         return;
     }
     
-    const colorStock = product.colors[item.colorIndex].stock;
-    
-    if (newQuantity > colorStock + (change > 0 ? 0 : item.quantity)) {
-        alert('Quantidade solicitada excede o estoque disponível!');
+    // Verificar estoque
+    const color = product.colors[item.colorIndex];
+    if (newQuantity > color.stock + (change > 0 ? 0 : item.quantity)) {
+        alert('❌ Quantidade solicitada excede o estoque disponível!');
         return;
     }
     
     // Atualizar estoque temporário
     updateTemporaryStock(item.productId, item.colorIndex, Math.abs(change), change > 0 ? 'decrease' : 'increase');
     
+    // Atualizar carrinho
     item.quantity = newQuantity;
     saveCart();
     updateCartUI();
@@ -559,17 +633,24 @@ function updateCartItemQuantity(index, change) {
 // Remover item do carrinho
 function removeFromCart(index) {
     const item = cart[index];
+    console.log('Removendo item do carrinho:', item.name);
     
-    // Restaurar estoque temporário
-    updateTemporaryStock(item.productId, item.colorIndex, item.quantity, 'increase');
-    
-    cart.splice(index, 1);
-    saveCart();
-    updateCartUI();
+    if (confirm(`Tem certeza que deseja remover ${item.name} - ${item.colorName} do carrinho?`)) {
+        // Restaurar estoque temporário
+        updateTemporaryStock(item.productId, item.colorIndex, item.quantity, 'increase');
+        
+        // Remover do carrinho
+        cart.splice(index, 1);
+        saveCart();
+        updateCartUI();
+        
+        alert('✅ Item removido do carrinho!');
+    }
 }
 
 // Atualizar resumo do pedido
 function updateOrderSummary() {
+    console.log('Atualizando resumo do pedido');
     orderItemsList.innerHTML = '';
     let total = 0;
     
@@ -587,64 +668,82 @@ function updateOrderSummary() {
     });
     
     orderTotalValue.textContent = total.toFixed(2);
+    console.log('Resumo atualizado. Total: R$', total.toFixed(2));
 }
 
 // Processar finalização de compra
 function handleCheckout(e) {
     e.preventDefault();
+    console.log('Processando finalização de compra...');
     
     const formData = new FormData(checkoutForm);
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     
+    // Validar pedido mínimo
     if (totalItems < 10) {
-        alert('Pedido mínimo de 10 peças!');
+        alert('❌ Pedido mínimo de 10 peças!');
         return;
     }
     
+    // Coletar dados do formulário
     const orderData = {
-        name: formData.get('name'),
-        cep: formData.get('cep'),
-        address: formData.get('address'),
+        name: formData.get('name').trim(),
+        cep: formData.get('cep').trim(),
+        address: formData.get('address').trim(),
         delivery: formData.get('delivery'),
-        phone: formData.get('phone'),
-        items: cart,
+        phone: formData.get('phone').trim(),
+        items: [...cart], // Copiar array do carrinho
         total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
         date: new Date().toISOString(),
         status: 'pendente'
     };
     
+    // Validar dados obrigatórios
+    if (!orderData.name || !orderData.cep || !orderData.address || !orderData.delivery || !orderData.phone) {
+        alert('❌ Preencha todos os campos obrigatórios!');
+        return;
+    }
+    
+    console.log('Dados do pedido:', orderData);
+    
     // Salvar pedido no Firestore
     db.collection('orders').add(orderData)
         .then(docRef => {
-            console.log('Pedido salvo com ID: ', docRef.id);
+            console.log('✅ Pedido salvo com ID:', docRef.id);
             
             // Enviar pedido via WhatsApp
             sendWhatsAppOrder(orderData);
             
-            // Limpar carrinho (estoque já foi reduzido permanentemente)
+            // Limpar carrinho
             cart = [];
             saveCart();
             updateCartUI();
             
-            // Fechar modais
-            closeCheckoutModalFunc();
+            // Fechar modais e resetar formulário
+            closeCheckoutModal();
             checkoutForm.reset();
+            
         })
         .catch(error => {
-            console.error('Erro ao salvar pedido:', error);
-            alert('Erro ao processar pedido. Tente novamente.');
+            console.error('❌ Erro ao salvar pedido:', error);
+            alert('❌ Erro ao processar pedido. Tente novamente.');
         });
 }
 
 // Enviar pedido via WhatsApp
 function sendWhatsAppOrder(orderData) {
+    console.log('Preparando envio via WhatsApp...');
+    
     // Buscar número do WhatsApp do admin
     db.collection('adminSettings').doc('whatsappNumber').get()
         .then(doc => {
-            let whatsappNumber = '55997720832'; // Número padrão
+            let whatsappNumber = '5585989408154'; // Número padrão
             
-            if (doc.exists) {
-                whatsappNumber = doc.data().number || whatsappNumber;
+            if (doc.exists && doc.data().number) {
+                whatsappNumber = doc.data().number.replace(/\D/g, ''); // Remover caracteres não numéricos
+                console.log('Número do WhatsApp encontrado:', whatsappNumber);
+            } else {
+                console.log('Usando número padrão do WhatsApp');
             }
             
             // Formatar mensagem
@@ -653,31 +752,48 @@ function sendWhatsAppOrder(orderData) {
             message += `*Telefone:* ${orderData.phone}%0A`;
             message += `*CEP:* ${orderData.cep}%0A`;
             message += `*Endereço:* ${orderData.address}%0A`;
-            message += `*Tipo de Entrega:* ${orderData.delivery}%0A%0A`;
-            message += `*ITENS DO PEDIDO:*%0A`;
+            message += `*Entrega:* ${orderData.delivery}%0A%0A`;
+            message += `*ITENS DO PEDIDO:*%0A%0A`;
             
-            orderData.items.forEach(item => {
-                message += `• ${item.quantity}x ${item.name} - ${item.colorName}%0A`;
-                message += `  R$ ${item.price.toFixed(2)} cada = R$ ${(item.price * item.quantity).toFixed(2)}%0A`;
+            orderData.items.forEach((item, index) => {
+                message += `*${index + 1}. ${item.name}*%0A`;
+                message += `Cor: ${item.colorName}%0A`;
+                message += `Quantidade: ${item.quantity}x%0A`;
+                message += `Valor unitário: R$ ${item.price.toFixed(2)}%0A`;
+                message += `Subtotal: R$ ${(item.price * item.quantity).toFixed(2)}%0A%0A`;
             });
             
-            message += `%0A*TOTAL: R$ ${orderData.total.toFixed(2)}*%0A`;
+            message += `*TOTAL DO PEDIDO: R$ ${orderData.total.toFixed(2)}*%0A%0A`;
             message += `*Forma de pagamento:* PIX%0A`;
-            message += `*Data:* ${new Date().toLocaleString('pt-BR')}%0A`;
-            message += `*Pedido Mínimo:* ✅ Atendido (${orderData.items.reduce((sum, item) => sum + item.quantity, 0)} peças)`;
+            message += `*Data/hora:* ${new Date().toLocaleString('pt-BR')}%0A`;
+            message += `*Status:* ✅ Pedido mínimo atendido (${orderData.items.reduce((sum, item) => sum + item.quantity, 0)} peças)`;
             
             // Criar link do WhatsApp
             const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
             
+            console.log('URL do WhatsApp gerada');
+            
             // Abrir WhatsApp em nova aba
             window.open(whatsappUrl, '_blank');
             
-            alert('Pedido enviado com sucesso! Em breve entraremos em contato via WhatsApp.');
+            alert('✅ Pedido enviado com sucesso! Em breve entraremos em contato via WhatsApp.');
+            
         })
         .catch(error => {
             console.error('Erro ao buscar número do WhatsApp:', error);
+            
             // Usar número padrão em caso de erro
             const whatsappUrl = `https://wa.me/55997720832?text=Pedido%20Hellen%20Moda%20Fitness`;
             window.open(whatsappUrl, '_blank');
+            
+            alert('✅ Pedido enviado com sucesso! Em breve entraremos em contato via WhatsApp.');
         });
 }
+
+// Função auxiliar para debug
+window.debugCart = function() {
+    console.log('=== DEBUG CARRINHO ===');
+    console.log('Itens no carrinho:', cart);
+    console.log('Produtos carregados:', products);
+    console.log('LocalStorage:', localStorage.getItem('cart'));
+};
